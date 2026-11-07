@@ -1,0 +1,8 @@
+@extends('layouts.app')
+@section('title', 'Produk')
+@section('subtitle', 'Kelola katalog, harga, dan batas minimum persediaan toko.')
+@section('actions')<a class="btn" href="{{ route('owner.products.create') }}">+ Tambah produk</a>@endsection
+@section('content')
+<section class="panel"><form class="toolbar" method="get"><label class="search"><span class="sr-only">Cari produk</span><input name="q" value="{{ request('q') }}" placeholder="Cari nama, kode, atau kategori…"></label><button class="btn secondary">Cari produk</button>@if(request('q'))<a href="{{ route('owner.products.index') }}">Reset</a>@endif<span class="muted push-right">{{ $products->total() }} produk</span></form>
+<div class="table-wrap"><table><thead><tr><th>Produk</th><th>Kategori</th><th>Harga jual</th><th>Stok</th><th>Minimum</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($products as $product)<tr><td><strong>{{ $product->nama }}</strong><small>{{ $product->kode }}</small></td><td>{{ $product->kategori }}</td><td class="money">Rp{{ number_format($product->harga_jual, 0, ',', '.') }}</td><td>{{ $product->stok }} {{ $product->satuan }}</td><td>{{ $product->stok_minimum }}</td><td>@include('components.status')</td><td><div class="row-actions"><a href="{{ route('owner.products.edit', $product) }}">Ubah</a><form method="post" action="{{ route('owner.products.destroy', $product) }}" data-confirm="Hapus produk ini?">@csrf @method('delete')<button class="text-danger">Hapus</button></form></div></td></tr>@empty<tr><td colspan="7" class="empty">Belum ada produk yang sesuai. Tambahkan produk untuk memulai.</td></tr>@endforelse</tbody></table></div>{{ $products->links() }}</section>
+@endsection
