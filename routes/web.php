@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{AuthController, ProductController, DistributorController, StockAlertController, StockInController, SaleController};
+use App\Http\Controllers\{AuthController, ProductController, DistributorController, StockAlertController, StockInController, SaleController, DashboardController, ReportController};
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -14,7 +14,9 @@ Route::middleware(['auth', 'role:owner,kasir'])->group(function () {
     Route::get('/peringatan-stok', StockAlertController::class)->name('stock.alerts');
     Route::get('/struk/{sale}', [SaleController::class, 'receipt'])->name('sales.receipt');
     Route::prefix('owner')->name('owner.')->middleware('role:owner')->group(function () {
-        Route::view('/dashboard', 'dashboard')->name('dashboard');
+        Route::get('/dashboard', DashboardController::class)->name('dashboard');
+        Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
         Route::resource('produk', ProductController::class)->except('show')->parameters(['produk' => 'product'])->names('products');
         Route::resource('distributor', DistributorController::class)->except('show')->names('distributors');
         Route::resource('barang-masuk', StockInController::class)->only(['index', 'create', 'store', 'destroy'])->parameters(['barang-masuk' => 'stockIn'])->names('stock-ins');
