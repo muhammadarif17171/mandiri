@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StockInRequest;
+use App\Http\Requests\SearchRequest;
 use App\Models\{Distributor, Product, StockIn};
 use App\Services\StockService;
 use Illuminate\Http\Request;
 
 class StockInController extends Controller
 {
-    public function index()
+    public function index(SearchRequest $request)
     {
         $invoices = StockIn::with(['distributor', 'user', 'items.product'])->latest('id')->paginate(10);
 

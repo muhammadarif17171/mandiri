@@ -13,7 +13,7 @@ class SaleRequest extends FormRequest
             'items' => 'required|array|min:1|max:100',
             'items.*.product_id' => 'required|integer|distinct|exists:products,id',
             'items.*.jumlah' => 'required|integer|min:1|max:1000000',
-            'bayar' => 'required|integer|min:0|max:10000000000000000',
+            'bayar' => 'required|integer|min:0|max:1000000000000000',
         ];
     }
 }

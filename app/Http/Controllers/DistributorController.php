@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DistributorRequest;
+use App\Http\Requests\SearchRequest;
 use App\Models\Distributor;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 class DistributorController extends Controller
 {
-    public function index()
+    public function index(SearchRequest $request)
     {
         return view('distributors.index', ['distributors' => Distributor::withCount('stockIns')->orderBy('nama')->paginate(15)]);
     }

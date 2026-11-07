@@ -51,15 +51,16 @@ class StockTransactionTest extends TestCase
     {
         $this->stock();
         $data = $this->order(); $data['items'][0]['harga'] = 1; $data['total'] = 1;
-        $this->actingAs($this->cashier)->post('/kasir', $data)->assertSessionHasNoErrors()->assertRedirect('/struk/1');
+        $response = $this->actingAs($this->cashier)->post('/kasir', $data)->assertSessionHasNoErrors();
         $sale = Sale::firstOrFail();
+        $response->assertRedirect('/struk/'.$sale->id);
         $this->assertSame(8, $this->product->fresh()->stok);
         $this->assertSame(30000, $sale->total);
         $this->assertSame(20000, $sale->kembalian);
         $this->assertMatchesRegularExpression('/^TRX-\d{8}-0001$/', $sale->no_transaksi);
-        $this->get('/struk/1?width=58')->assertOk()->assertSee('narrow')->assertSee('Rp30.000');
-        $this->get('/struk/1?width=80')->assertOk()->assertSee('Rp20.000');
-        $this->get('/struk/1?width=99')->assertSessionHasErrors('width');
+        $this->get('/struk/'.$sale->id.'?width=58')->assertOk()->assertSee('narrow')->assertSee('Rp30.000');
+        $this->get('/struk/'.$sale->id.'?width=80')->assertOk()->assertSee('Rp20.000');
+        $this->get('/struk/'.$sale->id.'?width=99')->assertSessionHasErrors('width');
     }
 
     public function test_insufficient_stock_and_payment_roll_back_all_changes(): void
@@ -140,5 +141,20 @@ class StockTransactionTest extends TestCase
         $this->post('/owner/barang-masuk', $this->incoming())->assertForbidden();
         $this->actingAs($this->owner)->post('/kasir', $this->order())->assertForbidden();
         $this->get('/owner/barang-masuk/create')->assertOk();
+    }
+
+    public function test_numbers_start_at_one_on_each_day_and_receipt_access_is_restricted(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-08 23:59:59', 'Asia/Jakarta'));
+        $this->stock();
+        $first = app(StockService::class)->sell($this->order(), $this->cashier);
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-09 00:00:00', 'Asia/Jakarta'));
+        $second = app(StockService::class)->sell($this->order(), $this->cashier);
+        $this->assertSame('TRX-20261108-0001', $first->no_transaksi);
+        $this->assertSame('TRX-20261109-0001', $second->no_transaksi);
+        $other = User::create(['name' => 'Kasir Lain', 'username' => 'lain', 'password' => 'password123', 'role' => 'kasir']);
+        $this->actingAs($other)->get('/struk/'.$first->id)->assertForbidden();
+        $this->actingAs($this->owner)->get('/struk/'.$first->id)->assertOk();
+        $this->travelBack();
     }
 }

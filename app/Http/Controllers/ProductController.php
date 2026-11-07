@@ -14,7 +14,7 @@ class ProductController extends Controller
     public function index(SearchRequest $request)
     {
         $q = $request->validated('q');
-        $products = Product::when($q, fn ($query) => $query->where(fn ($w) => $w->where('nama', 'like', "%{$q}%")->orWhere('kode', 'like', "%{$q}%")->orWhere('kategori', 'like', "%{$q}%")))->orderBy('nama')->paginate(15)->withQueryString();
+        $products = Product::when($request->filled('q'), fn ($query) => $query->where(fn ($w) => $w->where('nama', 'like', "%{$q}%")->orWhere('kode', 'like', "%{$q}%")->orWhere('kategori', 'like', "%{$q}%")))->orderBy('nama')->paginate(15)->withQueryString();
 
         return view('products.index', compact('products'));
     }

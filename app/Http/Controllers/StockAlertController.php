@@ -12,7 +12,7 @@ class StockAlertController extends Controller
         $status = $request->validated('status');
         $q = $request->validated('q');
         $products = Product::query()
-            ->when($q, fn ($w) => $w->where(fn ($w) => $w->where('nama', 'like', "%{$q}%")->orWhere('kode', 'like', "%{$q}%")))
+            ->when($request->filled('q'), fn ($w) => $w->where(fn ($w) => $w->where('nama', 'like', "%{$q}%")->orWhere('kode', 'like', "%{$q}%")))
             ->when(! $status, fn ($w) => $w->whereColumn('stok', '<=', 'stok_minimum'))
             ->when($status === 'aman', fn ($w) => $w->whereColumn('stok', '>', 'stok_minimum'))
             ->when($status === 'menipis', fn ($w) => $w->where('stok', '>', 0)->whereColumn('stok', '<=', 'stok_minimum'))

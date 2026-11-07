@@ -50,12 +50,14 @@ class FoundationTest extends TestCase
         $this->put('/owner/produk/'.$p->id, array_replace($data, ['nama' => 'Pakan Burung']))->assertSessionHasNoErrors();
         $this->get('/owner/produk?q=PK-001')->assertOk()->assertSee('Pakan Burung');
         $this->get('/owner/produk?q=Tidakada')->assertDontSee('Pakan Burung');
+        $this->get('/owner/produk?q=0')->assertSee('Pakan Burung');
         $this->delete('/owner/produk/'.$p->id)->assertSessionHasNoErrors();
         $this->assertDatabaseCount('products', 0);
         $this->post('/owner/distributor', ['nama' => 'PT Pakan'])->assertSessionHasNoErrors();
-        $this->put('/owner/distributor/1', ['nama' => 'PT Benih'])->assertSessionHasNoErrors();
+        $distributor = \App\Models\Distributor::firstOrFail();
+        $this->put('/owner/distributor/'.$distributor->id, ['nama' => 'PT Benih'])->assertSessionHasNoErrors()->assertRedirect();
         $this->get('/owner/distributor')->assertOk()->assertSee('PT Benih');
-        $this->delete('/owner/distributor/1')->assertSessionHasNoErrors();
+        $this->delete('/owner/distributor/'.$distributor->id)->assertSessionHasNoErrors();
         $this->assertDatabaseCount('distributors', 0);
     }
 

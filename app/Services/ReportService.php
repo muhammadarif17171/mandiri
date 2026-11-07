@@ -36,7 +36,7 @@ class ReportService
 
     public function charts(): array
     {
-        $start = today()->subMonths(11)->startOfMonth();
+        $start = today()->startOfMonth()->subMonths(11);
         // Satu kueri agregat untuk seluruh grafik; hari dan bulan kosong diisi nol.
         $daily = $this->sales($start->toDateString(), today()->toDateString())
             ->selectRaw('DATE(created_at) as tanggal, SUM(total) as omzet')
