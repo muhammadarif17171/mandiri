@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\{Product, User};
-use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\{DatabaseSeeder, ProductCatalogSeeder};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -125,6 +125,43 @@ class FoundationTest extends TestCase
             'satuan' => 'bungkus', 'harga_jual' => 1000, 'stok_minimum' => 0,
             'foto' => UploadedFile::fake()->createWithContent('bukan-gambar.txt', 'not an image'),
         ])->assertSessionHasErrors('foto');
+    }
+
+    public function test_kotak_unit_can_be_saved_and_edited(): void
+    {
+        $this->actingAs(User::where('role', 'owner')->first());
+        $data = ['kode' => 'PK-005', 'nama' => 'Pancing Kotak', 'kategori' => 'Peralatan Pancing / Mata Kail', 'satuan' => 'kotak', 'harga_jual' => 12000, 'stok_minimum' => 0];
+
+        $this->post('/owner/produk', $data)->assertSessionHasNoErrors();
+        $product = Product::where('kode', 'PK-005')->firstOrFail();
+        $this->assertSame('kotak', $product->satuan);
+
+        $this->put('/owner/produk/'.$product->id, array_replace($data, ['nama' => 'Pancing Kotak Premium']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Pancing Kotak Premium', $product->fresh()->nama);
+    }
+
+    public function test_catalog_seeder_imports_all_products_without_overwriting_existing_records(): void
+    {
+        $this->seed(ProductCatalogSeeder::class);
+
+        $this->assertDatabaseCount('products', 39);
+        $this->assertDatabaseHas('products', [
+            'kode' => 'BM-001', 'nama' => '5 11', 'kategori' => 'Pakan Ayam',
+            'satuan' => 'kg', 'harga_jual' => 14000, 'stok' => 0,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'kode' => 'BM-002', 'nama' => '5 12', 'harga_jual' => 15000,
+        ]);
+        $this->assertDatabaseHas('products', [
+            'kode' => 'BM-033', 'nama' => 'Pancing Kotak', 'satuan' => 'kotak',
+        ]);
+
+        Product::where('kode', 'BM-001')->update(['harga_jual' => 16000, 'stok' => 4]);
+        $this->seed(ProductCatalogSeeder::class);
+
+        $this->assertDatabaseCount('products', 39);
+        $this->assertDatabaseHas('products', ['kode' => 'BM-001', 'harga_jual' => 16000, 'stok' => 4]);
     }
 
     public function test_stock_status_boundaries_and_filter(): void

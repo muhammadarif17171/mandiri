@@ -12,7 +12,7 @@
             @endforeach
             <label>Satuan
                 <select name="satuan" required>
-                    @foreach(['satuan', 'kg', 'gram', 'bungkus', 'gulung', 'botol', 'karung', 'kemasan 500 g', 'kemasan 800 g'] as $unit)
+                    @foreach(['satuan', 'kg', 'gram', 'bungkus', 'gulung', 'botol', 'karung', 'kotak', 'kemasan 500 g', 'kemasan 800 g'] as $unit)
                         <option @selected(old('satuan', $product->satuan) === $unit)>{{ $unit }}</option>
                     @endforeach
                 </select>

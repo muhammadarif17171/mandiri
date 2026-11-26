@@ -77,6 +77,16 @@ php artisan db:seed --class=DemoSeeder
 
 Jalankan hanya pada database latihan. DemoSeeder membuat 9 produk, 1 distributor, 2 faktur dan 41 penjualan untuk contoh grafik serta status aman/menipis/habis. Semua stok demo juga diproses melalui `StockService`. Demo tidak berjalan otomatis dan tidak ditambahkan ulang selama faktur `DEMO-AWAL` masih ada.
 
+## Impor daftar produk
+
+Untuk memasukkan katalog dari file daftar produk:
+
+```powershell
+php artisan db:seed --class=ProductCatalogSeeder
+```
+
+Seeder membuat 39 produk dengan kode `BM-001` sampai `BM-039`, menggabungkan kategori dan subkategori, dan memulai stok serta stok minimum dari nol. Harga pada file dimasukkan sebagai harga jual, termasuk lima harga berstatus estimasi sesuai persetujuan. Satuan produk yang tertulis sebagai 500/800 gram dipetakan ke kemasan yang sesuai. Seeder hanya membuat kode yang belum ada dan tidak menimpa produk jika dijalankan ulang.
+
 ## Fitur dan hak akses
 
 | Fitur | Owner | Kasir |
