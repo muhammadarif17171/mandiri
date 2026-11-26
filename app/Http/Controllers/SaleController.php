@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\{ReceiptRequest, SaleRequest};
+use App\Http\Requests\{ReceiptRequest, SaleHistoryRequest, SaleRequest};
 use App\Models\{Product, Sale};
-use App\Services\StockService;
+use App\Services\{ReportService, StockService};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,6 +26,20 @@ class SaleController extends Controller
         $sale = $service->sell($request->validated(), $request->user());
 
         return redirect()->route('sales.receipt', $sale);
+    }
+    public function history(SaleHistoryRequest $request, ReportService $reports)
+    {
+        $from = $request->validated('from');
+        $to = $request->validated('to');
+        $query = $reports->sales($from, $to)->where('user_id', $request->user()->id);
+
+        return view('sales.history', [
+            'from' => $from,
+            'to' => $to,
+            'total' => (clone $query)->sum('total'),
+            'count' => (clone $query)->count(),
+            'sales' => $query->with(['items.product'])->latest('id')->paginate(15)->withQueryString(),
+        ]);
     }
     public function receipt(ReceiptRequest $request, Sale $sale)
     {
