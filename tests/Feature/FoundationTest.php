@@ -29,6 +29,32 @@ class FoundationTest extends TestCase
         }
     }
 
+    public function test_login_page_uses_branded_two_panel_layout_and_password_toggle(): void
+    {
+        $this->get('/login')->assertOk()
+            ->assertSee('BM')
+            ->assertSee('BINA MANDIRI')
+            ->assertSee('Masuk ke Sistem')
+            ->assertSee('login-shop-icon', false)
+            ->assertSee('login-wave', false)
+            ->assertSee('data-password-toggle', false)
+            ->assertDontSee('TOKO TERKELOLA, USAHA BERTUMBUH')
+            ->assertDontSee('Setiap barang tercatat.')
+            ->assertDontSee('Pakan · Benih · Vitamin · Perlengkapan pancing')
+            ->assertDontSee('SELAMAT DATANG KEMBALI')
+            ->assertDontSee('login-note', false);
+    }
+
+    public function test_login_uses_a_locally_hosted_lato_font(): void
+    {
+        $this->get('/login')->assertOk()->assertSee(asset('css/login.css'));
+
+        $stylesheet = file_get_contents(public_path('css/login.css'));
+        $this->assertStringContainsString("font-family: 'Lato'", $stylesheet);
+        $this->assertStringContainsString('lato-regular.ttf', $stylesheet);
+        $this->assertFileExists(public_path('fonts/lato-regular.ttf'));
+    }
+
     public function test_guest_redirect_and_server_role_restrictions(): void
     {
         $this->get('/owner/produk')->assertRedirect('/login');
