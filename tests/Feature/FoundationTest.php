@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\{Product, User};
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FoundationTest extends TestCase
@@ -59,6 +61,70 @@ class FoundationTest extends TestCase
         $this->get('/owner/distributor')->assertOk()->assertSee('PT Benih');
         $this->delete('/owner/distributor/'.$distributor->id)->assertSessionHasNoErrors();
         $this->assertDatabaseCount('distributors', 0);
+    }
+
+    public function test_product_photo_upload_is_shown_in_catalog_and_pos(): void
+    {
+        Storage::fake('public');
+        $this->actingAs(User::where('role', 'owner')->first())
+            ->post('/owner/produk', [
+                'kode' => 'PK-002', 'nama' => 'Pakan Ayam', 'kategori' => 'Pakan',
+                'satuan' => 'kg', 'harga_jual' => 18000, 'stok_minimum' => 2,
+                'foto' => UploadedFile::fake()->image('pakan.png'),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $product = Product::where('kode', 'PK-002')->firstOrFail();
+        $this->assertNotNull($product->foto_path);
+        Storage::disk('public')->assertExists($product->foto_path);
+        $photoUrl = Storage::disk('public')->url($product->foto_path);
+
+        $this->get('/owner/produk')->assertOk()->assertSee($photoUrl);
+        $this->actingAs(User::where('role', 'kasir')->first())
+            ->get('/kasir')
+            ->assertOk()
+            ->assertSee(str_replace('/', '\\/', $photoUrl), false);
+    }
+
+    public function test_product_photo_can_be_removed_and_non_images_are_rejected(): void
+    {
+        Storage::fake('public');
+        $product = Product::create([
+            'kode' => 'PK-003', 'nama' => 'Pakan Burung', 'kategori' => 'Pakan',
+            'satuan' => 'kg', 'harga_jual' => 18000, 'stok_minimum' => 2,
+        ]);
+        $this->actingAs(User::where('role', 'owner')->first());
+        $this->put('/owner/produk/'.$product->id, [
+            'kode' => 'PK-003', 'nama' => 'Pakan Burung', 'kategori' => 'Pakan',
+            'satuan' => 'kg', 'harga_jual' => 18000, 'stok_minimum' => 2,
+            'foto' => UploadedFile::fake()->image('pakan.png'),
+        ])->assertSessionHasNoErrors();
+
+        $photoPath = $product->fresh()->foto_path;
+        Storage::disk('public')->assertExists($photoPath);
+        $this->put('/owner/produk/'.$product->id, [
+            'kode' => 'PK-003', 'nama' => 'Pakan Burung', 'kategori' => 'Pakan',
+            'satuan' => 'kg', 'harga_jual' => 18000, 'stok_minimum' => 2,
+            'foto' => UploadedFile::fake()->image('pakan-baru.png'),
+        ])->assertSessionHasNoErrors();
+        $replacementPath = $product->fresh()->foto_path;
+        $this->assertNotSame($photoPath, $replacementPath);
+        Storage::disk('public')->assertExists($replacementPath);
+        Storage::disk('public')->assertMissing($photoPath);
+
+        $this->put('/owner/produk/'.$product->id, [
+            'kode' => 'PK-003', 'nama' => 'Pakan Burung', 'kategori' => 'Pakan',
+            'satuan' => 'kg', 'harga_jual' => 18000, 'stok_minimum' => 2,
+            'hapus_foto' => '1',
+        ])->assertSessionHasNoErrors();
+        $this->assertNull($product->fresh()->foto_path);
+        Storage::disk('public')->assertMissing($replacementPath);
+
+        $this->post('/owner/produk', [
+            'kode' => 'PK-004', 'nama' => 'Benih', 'kategori' => 'Benih',
+            'satuan' => 'bungkus', 'harga_jual' => 1000, 'stok_minimum' => 0,
+            'foto' => UploadedFile::fake()->createWithContent('bukan-gambar.txt', 'not an image'),
+        ])->assertSessionHasErrors('foto');
     }
 
     public function test_stock_status_boundaries_and_filter(): void

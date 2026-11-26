@@ -39,6 +39,7 @@ Kebutuhan: PHP 8.2 atau lebih baru, Composer 2, MySQL 8+, ekstensi PHP `pdo_mysq
 
    ```powershell
    php artisan migrate --seed
+   php artisan storage:link
    php artisan serve --host=127.0.0.1 --port=8000
    ```
 
@@ -53,6 +54,7 @@ $mandiriPhp = 'C:\laragon\bin\php\php-8.3.16-Win32-vs16-x64\php.exe'
 & $mandiriPhp -d extension=zip 'C:\laragon\bin\composer\composer.phar' install
 & $mandiriPhp artisan key:generate
 & $mandiriPhp artisan migrate --seed
+& $mandiriPhp artisan storage:link
 & $mandiriPhp artisan test
 ```
 
@@ -90,7 +92,7 @@ Jalankan hanya pada database latihan. DemoSeeder membuat 9 produk, 1 distributor
 
 Hak akses diperiksa oleh middleware `auth` dan `role` serta FormRequest di server. Tamu diarahkan ke login, sedangkan akses lintas peran menghasilkan HTTP 403. Percobaan login dibatasi 5 kali per menit. Menu Kasir hanya berisi Kasir dan Peringatan stok.
 
-- **Produk:** CRUD, pencarian nama/kode/kategori, kode unik, harga dan stok minimum. Produk baru dimulai dengan stok nol. Stok tidak dapat diedit melalui formulir master; gunakan barang masuk. Produk yang memiliki riwayat tidak dapat dihapus.
+- **Produk:** CRUD, pencarian nama/kode/kategori, kode unik, harga dan stok minimum, serta foto opsional JPG/PNG/WebP maksimal 2 MB. Foto ditampilkan di daftar produk dan pilihan barang kasir; jalankan `php artisan storage:link` agar foto tersedia. Produk baru dimulai dengan stok nol. Stok tidak dapat diedit melalui formulir master; gunakan barang masuk. Produk yang memiliki riwayat tidak dapat dihapus.
 - **Distributor:** CRUD, kontak sales, nomor HP, alamat, dan jumlah faktur. Distributor yang mempunyai faktur tidak dapat dihapus.
 - **Barang masuk:** distributor, nomor faktur unik per distributor, tanggal faktur, beberapa baris produk, jumlah, harga beli dan total. Produk yang sama tidak boleh muncul dua kali dalam satu faktur; tambahkan jumlah pada satu baris.
 - **Kasir:** cari produk, tambah/hapus keranjang, ubah jumlah, total otomatis, uang diterima dan kembalian. Produk habis tidak dapat dipilih. Server menghitung ulang harga dan total; nilai harga dari peramban diabaikan. Uang kurang atau stok kurang ditolak tanpa menyimpan transaksi.

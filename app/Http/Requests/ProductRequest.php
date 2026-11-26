@@ -16,6 +16,8 @@ class ProductRequest extends FormRequest
             'satuan' => ['required', Rule::in(['satuan', 'kg', 'gram', 'bungkus', 'gulung', 'botol', 'karung', 'kemasan 500 g', 'kemasan 800 g'])],
             'harga_jual' => 'required|integer|min:0|max:100000000',
             'stok_minimum' => 'required|integer|min:0|max:1000000',
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'hapus_foto' => ['sometimes', 'boolean'],
         ];
     }
 }
