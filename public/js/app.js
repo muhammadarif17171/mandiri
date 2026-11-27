@@ -75,7 +75,10 @@ if (document.getElementById('pos-data')) {
         filtered.forEach(product => {
             const button = makeNode('button', undefined, 'product-card');
             button.type = 'button'; button.disabled = product.stok === 0;
-            button.append(makeNode('span', '▧', 'product-symbol'), makeNode('small', product.kategori), makeNode('strong', product.nama), makeNode('small', product.kode + ' · ' + (product.stok ? `Stok ${product.stok} ${product.satuan}` : 'Stok habis')), makeNode('b', rupiah(product.harga_jual)));
+            const photo = product.foto_url
+                ? Object.assign(makeNode('img', undefined, 'product-photo'), {src: product.foto_url, alt: 'Foto ' + product.nama})
+                : makeNode('span', '▧', 'product-symbol');
+            button.append(photo, makeNode('small', product.kategori), makeNode('strong', product.nama), makeNode('small', product.kode + ' · ' + (product.stok ? `Stok ${product.stok} ${product.satuan}` : 'Stok habis')), makeNode('b', rupiah(product.harga_jual)));
             button.addEventListener('click', () => {
                 const item = cart.find(row => row.product_id === product.id);
                 if ((item?.jumlah || 0) + 1 > product.stok) { error('Stok ' + product.nama + ' tidak mencukupi.'); return; }

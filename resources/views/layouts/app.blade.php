@@ -18,7 +18,8 @@
         @if(Route::has('owner.stock-ins.index'))<a @class(['active' => request()->routeIs('owner.stock-ins.*')]) href="{{ route('owner.stock-ins.index') }}"><span>↓</span> Barang masuk</a>@endif
         @if(Route::has('owner.reports.index'))<a @class(['active' => request()->routeIs('owner.reports.*')]) href="{{ route('owner.reports.index') }}"><span>▥</span> Laporan penjualan</a>@endif
     @else
-        <a @class(['active' => request()->routeIs('kasir.*')]) href="{{ route('kasir.pos') }}"><span>▣</span> Kasir</a>
+        <a @class(['active' => request()->routeIs('kasir.pos', 'kasir.store')]) href="{{ route('kasir.pos') }}"><span>▣</span> Kasir</a>
+        <a @class(['active' => request()->routeIs('kasir.history')]) href="{{ route('kasir.history') }}"><span>◷</span> Riwayat transaksi</a>
     @endif
         <a @class(['active' => request()->routeIs('stock.alerts')]) href="{{ route('stock.alerts') }}"><span>△</span> Peringatan stok</a>
     </nav>

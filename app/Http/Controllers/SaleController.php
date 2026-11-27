@@ -2,22 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\{ReceiptRequest, SaleRequest};
+use App\Http\Requests\{ReceiptRequest, SaleHistoryRequest, SaleRequest};
 use App\Models\{Product, Sale};
-use App\Services\StockService;
+use App\Services\{ReportService, StockService};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SaleController extends Controller
 {
     public function index()
     {
-        return view('sales.pos', ['products' => Product::orderBy('nama')->get(['id', 'kode', 'nama', 'kategori', 'satuan', 'harga_jual', 'stok'])]);
+        $products = Product::orderBy('nama')->get(['id', 'kode', 'nama', 'kategori', 'satuan', 'harga_jual', 'stok', 'foto_path'])
+            ->map(function (Product $product) {
+                $product->foto_url = $product->foto_path ? Storage::disk('public')->url($product->foto_path) : null;
+
+                return $product;
+            });
+
+        return view('sales.pos', compact('products'));
     }
     public function store(SaleRequest $request, StockService $service)
     {
         $sale = $service->sell($request->validated(), $request->user());
 
         return redirect()->route('sales.receipt', $sale);
+    }
+    public function history(SaleHistoryRequest $request, ReportService $reports)
+    {
+        $from = $request->validated('from');
+        $to = $request->validated('to');
+        $query = $reports->sales($from, $to)->where('user_id', $request->user()->id);
+
+        return view('sales.history', [
+            'from' => $from,
+            'to' => $to,
+            'total' => (clone $query)->sum('total'),
+            'count' => (clone $query)->count(),
+            'sales' => $query->with(['items.product'])->latest('id')->paginate(15)->withQueryString(),
+        ]);
     }
     public function receipt(ReceiptRequest $request, Sale $sale)
     {

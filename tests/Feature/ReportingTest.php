@@ -55,4 +55,62 @@ class ReportingTest extends TestCase
         $this->get('/owner/laporan')->assertForbidden();
         $this->get('/owner/laporan/export')->assertForbidden();
     }
+
+    public function test_cashier_history_shows_only_sales_created_by_that_cashier(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-27 10:00:00', 'Asia/Jakarta'));
+        $this->seed();
+        $owner = User::where('role', 'owner')->firstOrFail();
+        $cashier = User::where('role', 'kasir')->firstOrFail();
+        $otherCashier = User::create([
+            'name' => 'Kasir Kedua', 'username' => 'kasir-kedua', 'email' => 'kasir-kedua@binamandiri.test',
+            'password' => 'password', 'role' => 'kasir',
+        ]);
+        $product = Product::create([
+            'kode' => 'HISTORY-1', 'nama' => 'Pakan', 'kategori' => 'Pakan', 'satuan' => 'kg',
+            'harga_jual' => 15000, 'stok_minimum' => 2,
+        ]);
+        $service = app(StockService::class);
+        $distributor = Distributor::create(['nama' => 'Distributor Riwayat']);
+        $service->receive([
+            'distributor_id' => $distributor->id, 'no_faktur' => 'HISTORY-INV-1', 'tanggal' => today()->toDateString(),
+            'items' => [['product_id' => $product->id, 'jumlah' => 10, 'harga_beli' => 10000]],
+        ], $owner);
+        $mySale = $service->sell(['bayar' => 15000, 'items' => [['product_id' => $product->id, 'jumlah' => 1]]], $cashier);
+        $otherSale = $service->sell(['bayar' => 15000, 'items' => [['product_id' => $product->id, 'jumlah' => 1]]], $otherCashier);
+
+        $this->actingAs($cashier)->get('/kasir/riwayat')->assertOk()
+            ->assertSee($mySale->no_transaksi)
+            ->assertDontSee($otherSale->no_transaksi)
+            ->assertSee('Riwayat transaksi');
+        $this->get('/kasir')->assertOk()->assertSee('Riwayat transaksi');
+        $this->actingAs($owner)->get('/kasir/riwayat')->assertForbidden();
+        $this->travelBack();
+    }
+
+    public function test_cashier_history_can_be_filtered_by_sale_date(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-11-27 10:00:00', 'Asia/Jakarta'));
+        $this->seed();
+        $owner = User::where('role', 'owner')->firstOrFail();
+        $cashier = User::where('role', 'kasir')->firstOrFail();
+        $product = Product::create([
+            'kode' => 'HISTORY-2', 'nama' => 'Pakan', 'kategori' => 'Pakan', 'satuan' => 'kg',
+            'harga_jual' => 15000, 'stok_minimum' => 2,
+        ]);
+        $service = app(StockService::class);
+        $distributor = Distributor::create(['nama' => 'Distributor Riwayat']);
+        $service->receive([
+            'distributor_id' => $distributor->id, 'no_faktur' => 'HISTORY-INV-2', 'tanggal' => today()->toDateString(),
+            'items' => [['product_id' => $product->id, 'jumlah' => 10, 'harga_beli' => 10000]],
+        ], $owner);
+        $todaySale = $service->sell(['bayar' => 15000, 'items' => [['product_id' => $product->id, 'jumlah' => 1]]], $cashier);
+        $this->travelTo(\Carbon\Carbon::parse('2026-10-31 23:59:59', 'Asia/Jakarta'));
+        $pastSale = $service->sell(['bayar' => 15000, 'items' => [['product_id' => $product->id, 'jumlah' => 1]]], $cashier);
+
+        $this->actingAs($cashier)->get('/kasir/riwayat?from=2026-10-31&to=2026-10-31')->assertOk()
+            ->assertSee($pastSale->no_transaksi)
+            ->assertDontSee($todaySale->no_transaksi);
+        $this->travelBack();
+    }
 }

@@ -23,5 +23,6 @@ Route::middleware(['auth', 'role:owner,kasir'])->group(function () {
         Route::delete('/penjualan/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
     });
     Route::get('/kasir', [SaleController::class, 'index'])->middleware('role:kasir')->name('kasir.pos');
+    Route::get('/kasir/riwayat', [SaleController::class, 'history'])->middleware('role:kasir')->name('kasir.history');
     Route::post('/kasir', [SaleController::class, 'store'])->middleware('role:kasir')->name('kasir.store');
 });
