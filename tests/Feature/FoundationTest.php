@@ -35,6 +35,7 @@ class FoundationTest extends TestCase
             ->assertSee('BM')
             ->assertSee('BINA MANDIRI')
             ->assertSee('Masuk ke Sistem')
+            ->assertDontSee('Gunakan akun Owner atau Kasir Anda.')
             ->assertSee('login-shop-icon', false)
             ->assertSee('login-wave', false)
             ->assertSee('data-password-toggle', false)

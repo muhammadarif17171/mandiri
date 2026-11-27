@@ -35,7 +35,6 @@
         <section class="login-form" aria-labelledby="login-title">
             <div class="login-form-inner">
                 <h2 id="login-title">Masuk ke Sistem</h2>
-                <p class="muted">Gunakan akun Owner atau Kasir Anda.</p>
                 <span class="login-accent" aria-hidden="true"></span>
             @if($errors->any())
                 <div class="notice error" role="alert">{{ $errors->first() }}</div>
